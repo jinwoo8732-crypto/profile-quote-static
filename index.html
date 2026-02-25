@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> 프로파일커머스 자동견적</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+<body>
+
+<h2>규격 선택</h2>
+<div id="sizeGrid"></div>
+
+<script>
+
+// 🔐 안전 선언 (중복 방지)
+if (!window.supabaseClient) {
+  window.supabaseClient = window.supabase.createClient(
+    "https://ritzqnjgivmrtysulzil.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdHpxbmpnaXZtcnR5c3VsemlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5ODA2MjMsImV4cCI6MjA4NzU1NjYyM30.oTeXacJlkMXKw1G4IRWUa3G2DM1wPvFl-9rzf5IdsxY"
+  );
+}
+
+const supabaseClient = window.supabaseClient;
+
+// 테스트용 규격 버튼
+const prices = {
+  2020:{silver:3900,black:6000},
+  2040:{silver:6900,black:9000},
+  3030:{silver:8900,black:11000},
+  3060:{silver:14000,black:18000},
+  4040:{silver:16000,black:19000},
+  4080:{silver:28000,black:30000}
+};
+
+function createSizeButtons(){
+  const grid = document.getElementById("sizeGrid");
+  Object.keys(prices).forEach(size=>{
+    const btn = document.createElement("button");
+    btn.innerText = size;
+    grid.appendChild(btn);
+  });
+}
+
+createSizeButtons();
+
+</script>
+
+</body>
+</html>
+
