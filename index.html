@@ -6,6 +6,7 @@
 <title>프로파일 자동견적</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body{font-family:Arial;background:#f4f6fa;margin:0;padding:20px;}
@@ -25,10 +26,10 @@ button{padding:10px;border:none;border-radius:6px;background:#2c3e70;color:#fff;
 <body>
 <div class="container">
 
-<h2>1️⃣ 규격 선택</h2>
+<h2>규격 선택</h2>
 <div id="sizeGrid" class="size-grid"></div>
 
-<h2>2️⃣ 길이 및 수량</h2>
+<h2>길이 및 수량</h2>
 <select id="color">
 <option value="silver">실버</option>
 <option value="black">블랙</option>
@@ -37,7 +38,7 @@ button{padding:10px;border:none;border-radius:6px;background:#2c3e70;color:#fff;
 <input type="number" id="qty" placeholder="수량" min="1">
 <div id="price">0 원</div>
 
-<h2>3️⃣ 가공 옵션</h2>
+<h2>가공 옵션</h2>
 탭 <input type="number" id="tapQty" value="0">
 홀 <input type="number" id="holeQty" value="0">
 카운터 <input type="number" id="counterQty" value="0">
@@ -45,7 +46,7 @@ button{padding:10px;border:none;border-radius:6px;background:#2c3e70;color:#fff;
 <button onclick="addToCart()">제품담기</button>
 
 <div class="cart">
-<h2>🛒 장바구니</h2>
+<h2>장바구니</h2>
 <table>
 <thead>
 <tr>
@@ -58,7 +59,7 @@ button{padding:10px;border:none;border-radius:6px;background:#2c3e70;color:#fff;
 <div class="total">총 합계: <span id="grandTotal">0</span> 원</div>
 </div>
 
-<h2>4️⃣ 고객 정보</h2>
+<h2>고객 정보</h2>
 <input type="text" id="custName" placeholder="고객명">
 <input type="text" id="custPhone" placeholder="연락처">
 <input type="email" id="custEmail" placeholder="이메일">
@@ -69,7 +70,7 @@ button{padding:10px;border:none;border-radius:6px;background:#2c3e70;color:#fff;
 
 <script>
 
-/* 🔐 Supabase 단 한 번만 생성 */
+/* Supabase */
 if (!window._sb) {
   window._sb = window.supabase.createClient(
     "https://ritzqnjgivmrtysulzil.supabase.co",
@@ -162,23 +163,58 @@ sum+=parseInt(cell.textContent.replace(/,/g,''))||0;
 document.getElementById("grandTotal").textContent=sum.toLocaleString();
 }
 
+/* PDF 생성 */
+function generatePDF(orderNo,name,phone,email,items,total){
+
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF();
+
+doc.setFontSize(18);
+doc.text("프로파일커머스 견적서",20,20);
+
+doc.setFontSize(11);
+doc.text("주문번호: "+orderNo,20,35);
+doc.text("고객명: "+name,20,45);
+doc.text("연락처: "+phone,20,55);
+doc.text("이메일: "+email,20,65);
+
+doc.text("--------------------------------------------------",20,75);
+
+let y=85;
+items.forEach((item,i)=>{
+doc.text((i+1)+". "+item,20,y);
+y+=8;
+});
+
+doc.text("--------------------------------------------------",20,y+5);
+
+doc.setFontSize(14);
+doc.text("총 합계: "+total.toLocaleString()+" 원",20,y+20);
+
+doc.setFontSize(10);
+doc.text("입금계좌: 국민은행 123-456-7890 (프로파일커머스)",20,y+35);
+doc.text("견적 유효기간: 발행일로부터 7일",20,y+45);
+
+doc.save("견적서_"+orderNo+".pdf");
+}
+
 /* 제출 */
 async function submitQuote(){
+
 const name=document.getElementById("custName").value;
 const phone=document.getElementById("custPhone").value;
 const email=document.getElementById("custEmail").value;
 const total=parseInt(document.getElementById("grandTotal").textContent.replace(/,/g,''))||0;
 const orderNo="BD-"+Date.now();
 
-/* ✅ 여기서 window._sb 직접 사용 */
-await window._sb.from("quotes").insert([{
-order_no:orderNo,
-name:name,
-phone:phone,
-email:email,
-total:total,
-status:"접수"
-}]);
+await window._sb.from("quotes").insert([{order_no:orderNo,name,phone,email,total,status:"접수"}]);
+
+let items=[];
+document.querySelectorAll("#cartBody tr").forEach(row=>{
+items.push(row.innerText);
+});
+
+generatePDF(orderNo,name,phone,email,items,total);
 
 alert("접수 완료! 주문번호: "+orderNo);
 }
