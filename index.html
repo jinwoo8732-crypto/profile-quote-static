@@ -15,38 +15,41 @@ body{font-family:Arial;background:#f4f6fa;margin:0;padding:20px;}
 .size-btn{padding:10px;border:none;border-radius:8px;background:#e8ecf4;cursor:pointer;}
 .size-btn.active{background:#2c3e70;color:#fff;}
 input,select{padding:8px;margin:5px 0;border-radius:6px;border:1px solid #ccc;width:100%;}
-button{padding:10px;border:none;border-radius:6px;background:#2c3e70;color:#fff;cursor:pointer;}
+button{padding:10px 15px;border:none;border-radius:6px;background:#2c3e70;color:#fff;cursor:pointer;margin-right:5px;}
 .cart table{width:100%;border-collapse:collapse;margin-top:15px;}
 .cart th,.cart td{border:1px solid #ddd;padding:6px;text-align:center;}
 .cart th{background:#f0f2f7;}
-.total{text-align:right;font-weight:bold;margin-top:10px;}
+.total{text-align:right;font-weight:bold;margin-top:10px;font-size:18px;}
+.btn-area{margin-top:15px;}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h2>규격 선택</h2>
+<h2>1️⃣ 규격 선택</h2>
 <div id="sizeGrid" class="size-grid"></div>
 
-<h2>길이 및 수량</h2>
+<h2>2️⃣ 길이 및 수량</h2>
 <select id="color">
 <option value="silver">실버</option>
 <option value="black">블랙</option>
 </select>
+
 <input type="number" id="length" placeholder="길이(mm)" min="50">
 <input type="number" id="qty" placeholder="수량" min="1">
 <div id="price">0 원</div>
 
-<h2>가공 옵션</h2>
+<h2>3️⃣ 가공 옵션</h2>
 탭 <input type="number" id="tapQty" value="0">
 홀 <input type="number" id="holeQty" value="0">
 카운터 <input type="number" id="counterQty" value="0">
+
 <br><br>
-<button onclick="addToCart()">제품담기</button>
+<button type="button" onclick="addToCart()">제품담기</button>
 
 <div class="cart">
-<h2>장바구니</h2>
+<h2>🛒 장바구니</h2>
 <table>
 <thead>
 <tr>
@@ -59,18 +62,21 @@ button{padding:10px;border:none;border-radius:6px;background:#2c3e70;color:#fff;
 <div class="total">총 합계: <span id="grandTotal">0</span> 원</div>
 </div>
 
-<h2>고객 정보</h2>
+<h2>4️⃣ 고객 정보</h2>
 <input type="text" id="custName" placeholder="고객명">
 <input type="text" id="custPhone" placeholder="연락처">
 <input type="email" id="custEmail" placeholder="이메일">
-<br><br>
-<button onclick="submitQuote()">견적 요청</button>
-<button onclick="downloadPDF()">📄 PDF 다운로드</button>
+
+<div class="btn-area">
+<button type="button" onclick="submitQuote()">견적 요청</button>
+<button type="button" onclick="downloadPDF()">📄 PDF 다운로드</button>
+</div>
+
 </div>
 
 <script>
 
-/* Supabase */
+/* 🔐 Supabase 단 1회 생성 */
 if (!window._sb) {
   window._sb = window.supabase.createClient(
     "https://ritzqnjgivmrtysulzil.supabase.co",
@@ -149,7 +155,7 @@ row.innerHTML=`
 <td>${qty}</td>
 <td>탭:${tap} 홀:${hole} 카운터:${counter}</td>
 <td class="linePrice">${result.total.toLocaleString()}</td>
-<td><button onclick="this.closest('tr').remove();updateGrand();">X</button></td>
+<td><button type="button" onclick="this.closest('tr').remove();updateGrand();">X</button></td>
 `;
 document.getElementById("cartBody").appendChild(row);
 updateGrand();
@@ -178,7 +184,7 @@ doc.text("고객명: "+name,20,45);
 doc.text("연락처: "+phone,20,55);
 doc.text("이메일: "+email,20,65);
 
-doc.text("--------------------------------------------------",20,75);
+doc.text("---------------------------------------",20,75);
 
 let y=85;
 items.forEach((item,i)=>{
@@ -186,7 +192,7 @@ doc.text((i+1)+". "+item,20,y);
 y+=8;
 });
 
-doc.text("--------------------------------------------------",20,y+5);
+doc.text("---------------------------------------",20,y+5);
 
 doc.setFontSize(14);
 doc.text("총 합계: "+total.toLocaleString()+" 원",20,y+20);
@@ -198,22 +204,7 @@ doc.text("견적 유효기간: 발행일로부터 7일",20,y+45);
 doc.save("견적서_"+orderNo+".pdf");
 }
 
-/* 제출 */
-async function submitQuote(){
-
-const name=document.getElementById("custName").value;
-const phone=document.getElementById("custPhone").value;
-const email=document.getElementById("custEmail").value;
-const total=parseInt(document.getElementById("grandTotal").textContent.replace(/,/g,''))||0;
-const orderNo="BD-"+Date.now();
-
-await window._sb.from("quotes").insert([{order_no:orderNo,name,phone,email,total,status:"접수"}]);
-
-let items=[];
-document.querySelectorAll("#cartBody tr").forEach(row=>{
-items.push(row.innerText);
-});
-
+/* PDF 버튼 */
 function downloadPDF(){
 
 const name=document.getElementById("custName").value||"미입력";
@@ -232,11 +223,26 @@ items.push(row.innerText);
 });
 
 const orderNo="TEMP-"+Date.now();
-
 generatePDF(orderNo,name,phone,email,items,total);
-
 }
-  
+
+/* 견적 요청 */
+async function submitQuote(){
+
+const name=document.getElementById("custName").value;
+const phone=document.getElementById("custPhone").value;
+const email=document.getElementById("custEmail").value;
+const total=parseInt(document.getElementById("grandTotal").textContent.replace(/,/g,''))||0;
+const orderNo="BD-"+Date.now();
+
+await window._sb.from("quotes").insert([{
+order_no:orderNo,
+name:name,
+phone:phone,
+email:email,
+total:total,
+status:"접수"
+}]);
 
 alert("접수 완료! 주문번호: "+orderNo);
 }
@@ -247,4 +253,3 @@ updatePrice();
 </script>
 </body>
 </html>
-
