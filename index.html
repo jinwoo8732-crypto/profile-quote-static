@@ -135,19 +135,18 @@ function updateImage(){
 const color=document.getElementById("color").value;
 document.getElementById(`img_${selectedSize}`).src=`images/${selectedSize}_${color}.png`;
 }
-
-function calculateLine(size,color,length,qty,tap,hole,counter){
+function calculateLine(size,color,length,qty,tapOne,tapTwo,hole,counter){
 
 const errorBox = document.getElementById("lengthError");
-errorBox.innerText = "";
+if(errorBox) errorBox.innerText = "";
 
 if(length && length < 50){
-errorBox.innerText = "최소 주문 길이는 50mm 이상입니다.";
+if(errorBox) errorBox.innerText="최소 주문 길이는 50mm 이상입니다.";
 return 0;
 }
 
 if(length > 3000){
-errorBox.innerText = "3m 초과 제품은 배송이 불가합니다.";
+if(errorBox) errorBox.innerText="3m 초과 제품은 배송이 불가합니다.";
 return 0;
 }
 
@@ -155,20 +154,27 @@ const unit100=Math.ceil(length/100);
 const base100=prices[size][color]/10;
 
 let total=unit100*base100*qty;
-total+=300*tap+400*hole+1000*counter;
+
+/* 가공 단가 */
+total += 300 * tapOne;
+total += 600 * tapTwo;   // 양쪽은 2배
+total += 400 * hole;
+total += 1000 * counter;
 
 return total;
 }
 
+  
 function updatePrice(){
 const color=document.getElementById("color").value;
 const length=parseInt(document.getElementById("length").value)||0;
 const qty=parseInt(document.getElementById("qty").value)||0;
-const tap=parseInt(document.getElementById("tapQty").value)||0;
+const tapOne=parseInt(document.getElementById("tapOneQty").value)||0;
+const tapTwo=parseInt(document.getElementById("tapTwoQty").value)||0;
 const hole=parseInt(document.getElementById("holeQty").value)||0;
 const counter=parseInt(document.getElementById("counterQty").value)||0;
-const total=calculateLine(selectedSize,color,length,qty,tap,hole,counter);
-document.getElementById("price").innerText=total.toLocaleString()+" 원";
+
+const total=calculateLine(selectedSize,color,length,qty,tapOne,tapTwo,hole,counter);document.getElementById("price").innerText=total.toLocaleString()+" 원";
 }
 
 document.addEventListener("input",updatePrice);
@@ -190,7 +196,7 @@ div.innerHTML=`
 <strong>${selectedSize}</strong> (${color})<br>
 길이: <input type="number" value="${length}" style="width:80px;"> mm
 수량: <input type="number" value="${qty}" style="width:60px;">
-<br>가공: 탭 ${tap} / 홀 ${hole} / 카운터 ${counter}
+<br>한쪽탭 ${tap} / 양쪽탭 ${tap} / 홀 ${hole} / 카운터 ${counter}
 <br>금액: <span class="linePrice">${total.toLocaleString()}</span> 원
 <br>
 <button onclick="recalc(this)">재계산</button>
@@ -243,5 +249,6 @@ updatePrice();
 </script>
 </body>
 </html>
+
 
 
