@@ -3,122 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>프로파일커머스 자동견적</title>
+<title>프로파일 자동견적</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{
-margin:0;
-font-family:'Pretendard',sans-serif;
-background:#f6f7fb;
-}
-
-.header{
-background:#1e2a45;
-color:#fff;
-padding:20px;
-font-size:20px;
-font-weight:bold;
-text-align:center;
-}
-
-.section{
-padding:20px;
-background:#fff;
-margin-bottom:10px;
-}
-
-.size-grid{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:10px;
-}
-
-.size-card{
-padding:15px;
-border-radius:12px;
-background:#eef1f7;
-text-align:center;
-font-weight:600;
-cursor:pointer;
-transition:0.2s;
-}
-
-.size-card.active{
-background:#1e2a45;
-color:#fff;
-}
-
-input,select{
-width:100%;
-padding:12px;
-margin-top:8px;
-border-radius:8px;
-border:1px solid #ddd;
-font-size:15px;
-}
-
-.option-row{
-display:flex;
-gap:10px;
-}
-
-.option-row input{
-flex:1;
-}
-
-.price-box{
-font-size:20px;
-font-weight:bold;
-margin-top:10px;
-color:#1e2a45;
-}
-
-.cart-item{
-background:#f1f3f9;
-padding:12px;
-border-radius:10px;
-margin-bottom:8px;
-font-size:14px;
-}
-
-.fixed-bar{
-position:fixed;
-bottom:0;
-left:0;
-width:100%;
-background:#fff;
-border-top:1px solid #ddd;
-padding:10px;
-display:flex;
-gap:10px;
-}
-
-.fixed-bar button{
-flex:1;
-padding:15px;
-border:none;
-border-radius:10px;
-font-size:16px;
-font-weight:bold;
-}
-
-.btn-primary{
-background:#1e2a45;
-color:#fff;
-}
-
-.btn-outline{
-background:#fff;
-border:2px solid #1e2a45;
-color:#1e2a45;
-}
-
-.footer-space{
-height:90px;
-}
+body{margin:0;font-family:Arial;background:#f6f7fb;}
+.header{background:#1e2a45;color:#fff;padding:20px;text-align:center;font-weight:bold;font-size:20px;}
+.section{background:#fff;padding:20px;margin-bottom:10px;}
+.size-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+.size-card{padding:15px;background:#eef1f7;border-radius:10px;text-align:center;font-weight:600;cursor:pointer;}
+.size-card.active{background:#1e2a45;color:#fff;}
+input,select{width:100%;padding:10px;margin-top:8px;border-radius:6px;border:1px solid #ccc;}
+.price-box{font-size:18px;font-weight:bold;margin-top:10px;}
+.cart-item{background:#f1f3f9;padding:10px;border-radius:8px;margin-bottom:6px;font-size:14px;}
+.fixed-bar{position:fixed;bottom:0;left:0;width:100%;background:#fff;border-top:1px solid #ddd;padding:10px;display:flex;gap:10px;}
+.fixed-bar button{flex:1;padding:15px;border:none;border-radius:8px;font-weight:bold;}
+.btn-primary{background:#1e2a45;color:#fff;}
+.btn-outline{background:#fff;border:2px solid #1e2a45;color:#1e2a45;}
+.footer-space{height:100px;}
 </style>
 </head>
 
@@ -137,19 +41,17 @@ height:90px;
 <option value="silver">실버</option>
 <option value="black">블랙</option>
 </select>
-<input type="number" id="length" placeholder="길이 (mm)">
+<input type="number" id="length" placeholder="길이(mm)" min="50">
 <input type="number" id="qty" placeholder="수량">
 <div class="price-box" id="price">0 원</div>
 </div>
 
 <div class="section">
 <h3>가공 옵션</h3>
-<div class="option-row">
-<input type="number" id="tapQty" value="0" placeholder="탭">
-<input type="number" id="holeQty" value="0" placeholder="홀">
-<input type="number" id="counterQty" value="0" placeholder="카운터">
-</div>
-<button class="btn-primary" onclick="addToCart()" style="margin-top:10px;width:100%">장바구니 담기</button>
+탭 <input type="number" id="tapQty" value="0">
+홀 <input type="number" id="holeQty" value="0">
+카운터 <input type="number" id="counterQty" value="0">
+<button style="margin-top:10px;width:100%" onclick="addToCart()">장바구니 담기</button>
 </div>
 
 <div class="section">
@@ -174,11 +76,11 @@ height:90px;
 
 <script>
 
-/* Supabase */
+/* Supabase 안전 생성 */
 if(!window._sb){
 window._sb = window.supabase.createClient(
-"YOUR_SUPABASE_URL",
-"YOUR_ANON_KEY"
+"https://ritzqnjgivmrtysulzil.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdHpxbmpnaXZtcnR5c3VsemlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5ODA2MjMsImV4cCI6MjA4NzU1NjYyM30.oTeXacJlkMXKw1G4IRWUa3G2DM1wPvFl-9rzf5IdsxY"
 );
 }
 
@@ -194,7 +96,7 @@ const prices={
 
 let selectedSize="2020";
 
-/* 카드 버튼 생성 */
+/* 규격 버튼 */
 function createSizeButtons(){
 const grid=document.getElementById("sizeGrid");
 Object.keys(prices).forEach(size=>{
@@ -237,10 +139,10 @@ document.addEventListener("input",updatePrice);
 
 /* 장바구니 */
 function addToCart(){
-const total=document.getElementById("price").innerText;
+const total=parseInt(document.getElementById("price").innerText.replace(/,/g,''))||0;
 const div=document.createElement("div");
 div.className="cart-item";
-div.innerText=selectedSize+" / "+total;
+div.innerText=selectedSize+" / "+total.toLocaleString()+" 원";
 document.getElementById("cartList").appendChild(div);
 updateGrand();
 }
@@ -256,12 +158,29 @@ document.getElementById("grandTotal").innerText=sum.toLocaleString();
 
 /* PDF */
 function downloadPDF(){
-alert("PDF 연결 가능 (기존 함수 유지 가능)");
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF();
+doc.text("Profile Quotation",20,20);
+doc.save("quotation.pdf");
 }
 
 /* 제출 */
 async function submitQuote(){
-alert("메일 + DB 연결 유지됨");
+const name=document.getElementById("custName").value;
+const phone=document.getElementById("custPhone").value;
+const email=document.getElementById("custEmail").value;
+const total=parseInt(document.getElementById("grandTotal").innerText.replace(/,/g,''))||0;
+const orderNo="BD-"+Date.now();
+
+await window._sb.from("quotes").insert([{order_no:orderNo,name,phone,email,total,status:"접수"}]);
+
+await fetch("/api/send-email",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({name,phone,email,total,orderNo})
+});
+
+alert("접수 완료!");
 }
 
 createSizeButtons();
