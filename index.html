@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>프로파일커머스 자동견적</title>
+<title>프로파일 자동견적</title>
 
+<!-- Supabase CDN (이 줄은 1번만 있어야 함) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -34,6 +35,7 @@ button{padding:10px 15px;border:none;border-radius:6px;background:#2c3e70;color:
 <option value="silver">실버</option>
 <option value="black">블랙</option>
 </select>
+
 <input type="number" id="length" placeholder="길이(mm)" min="50">
 <input type="number" id="qty" placeholder="수량" min="1">
 <div id="price">0 원</div>
@@ -70,13 +72,23 @@ button{padding:10px 15px;border:none;border-radius:6px;background:#2c3e70;color:
 
 <script>
 
-// 🔐 Supabase 연결
-const supabase = window.supabase.createClient(
-  "https://ritzqnjgivmrtysulzil.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdHpxbmpnaXZtcnR5c3VsemlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5ODA2MjMsImV4cCI6MjA4NzU1NjYyM30.oTeXacJlkMXKw1G4IRWUa3G2DM1wPvFl-9rzf5IdsxY"
-);
+/* =========================
+   🔐 Supabase 안전 선언
+========================= */
 
-// 단가표
+if (!window._supabaseClient) {
+  window._supabaseClient = window.supabase.createClient(
+    "https://ritzqnjgivmrtysulzil.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdHpxbmpnaXZtcnR5c3VsemlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5ODA2MjMsImV4cCI6MjA4NzU1NjYyM30.oTeXacJlkMXKw1G4IRWUa3G2DM1wPvFl-9rzf5IdsxY"
+  );
+}
+
+const supabase = window._supabaseClient;
+
+/* =========================
+   단가표
+========================= */
+
 const prices = {
   2020:{silver:3900,black:6000},
   2040:{silver:6900,black:9000},
@@ -87,6 +99,10 @@ const prices = {
 };
 
 let selectedSize = "2020";
+
+/* =========================
+   규격 버튼 생성
+========================= */
 
 function createSizeButtons(){
   const grid = document.getElementById("sizeGrid");
@@ -104,6 +120,10 @@ function createSizeButtons(){
   });
   document.querySelector(".size-btn").classList.add("active");
 }
+
+/* =========================
+   가격 계산
+========================= */
 
 function calculateLine(size,color,length,qty,tap,hole,counter){
   if(length < 50) length = 50;
@@ -126,6 +146,10 @@ function updatePrice(){
 }
 
 document.addEventListener("input",updatePrice);
+
+/* =========================
+   장바구니
+========================= */
 
 function addToCart(){
   const color = document.getElementById("color").value;
@@ -157,6 +181,10 @@ function updateGrand(){
   });
   document.getElementById("grandTotal").textContent=sum.toLocaleString();
 }
+
+/* =========================
+   제출
+========================= */
 
 async function submitQuote(){
   const name=document.getElementById("custName").value;
