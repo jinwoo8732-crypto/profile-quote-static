@@ -46,6 +46,7 @@ input,select{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px 
 <input type="number" id="length" placeholder="길이(mm)" min="50">
 <input type="number" id="qty" placeholder="수량" min="1">
 <div class="total-box" id="price">0 원</div>
+<div id="lengthError" style="color:red;font-size:13px;margin-top:4px;"></div>
 </div>
 
 <div class="section">
@@ -114,12 +115,26 @@ document.getElementById(`img_${selectedSize}`).src=`images/${selectedSize}_${col
 }
 
 function calculateLine(size,color,length,qty,tap,hole,counter){
-if(length<50){alert("최소 50mm 이상");return 0;}
-if(length>3000){alert("3m 이상 배송불가");return 0;}
+
+const errorBox = document.getElementById("lengthError");
+errorBox.innerText = "";
+
+if(length && length < 50){
+errorBox.innerText = "최소 주문 길이는 50mm 이상입니다.";
+return 0;
+}
+
+if(length > 3000){
+errorBox.innerText = "3m 초과 제품은 배송이 불가합니다.";
+return 0;
+}
+
 const unit100=Math.ceil(length/100);
 const base100=prices[size][color]/10;
+
 let total=unit100*base100*qty;
 total+=300*tap+400*hole+1000*counter;
+
 return total;
 }
 
@@ -206,3 +221,4 @@ updatePrice();
 </script>
 </body>
 </html>
+
