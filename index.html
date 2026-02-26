@@ -65,7 +65,7 @@ button{padding:10px;border:none;border-radius:6px;background:#2c3e70;color:#fff;
 <input type="email" id="custEmail" placeholder="이메일">
 <br><br>
 <button onclick="submitQuote()">견적 요청</button>
-
+<button onclick="downloadPDF()">📄 PDF 다운로드</button>
 </div>
 
 <script>
@@ -214,7 +214,29 @@ document.querySelectorAll("#cartBody tr").forEach(row=>{
 items.push(row.innerText);
 });
 
+function downloadPDF(){
+
+const name=document.getElementById("custName").value||"미입력";
+const phone=document.getElementById("custPhone").value||"미입력";
+const email=document.getElementById("custEmail").value||"미입력";
+const total=parseInt(document.getElementById("grandTotal").textContent.replace(/,/g,''))||0;
+
+if(total===0){
+alert("장바구니가 비어있습니다.");
+return;
+}
+
+let items=[];
+document.querySelectorAll("#cartBody tr").forEach(row=>{
+items.push(row.innerText);
+});
+
+const orderNo="TEMP-"+Date.now();
+
 generatePDF(orderNo,name,phone,email,items,total);
+
+}
+  
 
 alert("접수 완료! 주문번호: "+orderNo);
 }
@@ -225,3 +247,4 @@ updatePrice();
 </script>
 </body>
 </html>
+
