@@ -48,15 +48,37 @@ input,select{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px 
 <div class="total-box" id="price">0 원</div>
 <div id="lengthError" style="color:red;font-size:13px;margin-top:4px;"></div>
 </div>
-
 <div class="section">
 <h3>3. 가공 옵션</h3>
-탭 <input type="number" id="tapQty" value="0" min="0">
-홀 <input type="number" id="holeQty" value="0" min="0">
-카운터 <input type="number" id="counterQty" value="0" min="0">
-<button style="margin-top:10px;width:100%" onclick="addToCart()">장바구니 담기</button>
+
+<div style="margin-bottom:15px;">
+<strong>한쪽 탭</strong><br>
+<img src="images/tap_one.png" style="width:120px;"><br>
+<small>한쪽 끝에 탭 가공</small><br>
+수량 <input type="number" id="tapOneQty" value="0" min="0">
 </div>
 
+<div style="margin-bottom:15px;">
+<strong>양쪽 탭</strong><br>
+<img src="images/tap_two.png" style="width:120px;"><br>
+<small>양쪽 끝에 탭 가공</small><br>
+수량 <input type="number" id="tapTwoQty" value="0" min="0">
+</div>
+
+<div style="margin-bottom:15px;">
+<strong>홀 가공</strong><br>
+<img src="images/hole.png" style="width:120px;"><br>
+수량 <input type="number" id="holeQty" value="0" min="0">
+</div>
+
+<div style="margin-bottom:15px;">
+<strong>카운터보어</strong><br>
+<img src="images/counter.png" style="width:120px;"><br>
+수량 <input type="number" id="counterQty" value="0" min="0">
+</div>
+
+<button style="margin-top:10px;width:100%" onclick="addToCart()">장바구니 담기</button>
+</div>
 <div class="section">
 <h3>장바구니</h3>
 <div id="cartList"></div>
@@ -221,4 +243,5 @@ updatePrice();
 </script>
 </body>
 </html>
+
 
