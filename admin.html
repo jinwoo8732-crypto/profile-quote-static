@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>관리자 페이지</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<h2>📋 견적 목록</h2>
+<table border="1" cellpadding="6">
+<thead>
+<tr>
+<th>주문번호</th><th>고객명</th><th>연락처</th>
+<th>이메일</th><th>금액</th><th>상태</th>
+</tr>
+</thead>
+<tbody id="list"></tbody>
+</table>
+
+<script>
+if(!window._sb){
+  window._sb=window.supabase.createClient("YOUR_SUPABASE_URL","YOUR_ANON_KEY");
+}
+const supabase=window._sb;
+
+async function load(){
+  const {data}=await supabase.from("quotes").select("*").order("created_at",{ascending:false});
+  const tbody=document.getElementById("list");
+  data.forEach(row=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${row.order_no}</td>
+      <td>${row.name}</td>
+      <td>${row.phone}</td>
+      <td>${row.email}</td>
+      <td>${row.total}</td>
+      <td>${row.status}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+load();
+</script>
+
+</body>
+</html>
