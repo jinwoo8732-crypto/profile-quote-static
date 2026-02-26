@@ -228,13 +228,21 @@ generatePDF(orderNo,name,phone,email,items,total);
 
 /* 견적 요청 */
 async function submitQuote(){
+async function submitQuote(){
 
 const name=document.getElementById("custName").value;
 const phone=document.getElementById("custPhone").value;
 const email=document.getElementById("custEmail").value;
 const total=parseInt(document.getElementById("grandTotal").textContent.replace(/,/g,''))||0;
+
+if(!name || !phone || !email){
+alert("고객 정보를 입력해주세요.");
+return;
+}
+
 const orderNo="BD-"+Date.now();
 
+// 1️⃣ DB 저장
 await window._sb.from("quotes").insert([{
 order_no:orderNo,
 name:name,
@@ -244,7 +252,15 @@ total:total,
 status:"접수"
 }]);
 
+// 2️⃣ 메일 전송
+await fetch("/api/send-email", {
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({name,phone,email,total,orderNo})
+});
+
 alert("접수 완료! 주문번호: "+orderNo);
+
 }
 
 createSizeButtons();
@@ -253,3 +269,4 @@ updatePrice();
 </script>
 </body>
 </html>
+
