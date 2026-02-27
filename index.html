@@ -70,7 +70,7 @@ button{padding:8px 12px;margin-top:8px;border:none;border-radius:6px;cursor:poin
 <script>
 
 /* 🔐 Supabase 단 한 번만 선언 */
-const supabase = window.supabase.createClient(
+window._sb = window.supabase.createClient(
   "https://ritzqnjgivmrtysulzil.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdHpxbmpnaXZtcnR5c3VsemlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5ODA2MjMsImV4cCI6MjA4NzU1NjYyM30.oTeXacJlkMXKw1G4IRWUa3G2DM1wPvFl-9rzf5IdsxY"
 );
@@ -189,3 +189,4 @@ document.addEventListener("DOMContentLoaded",createSizeButtons);
 </script>
 </body>
 </html>
+
