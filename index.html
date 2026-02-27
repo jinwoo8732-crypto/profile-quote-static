@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>프로파일 자동견적</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body{margin:0;font-family:Arial;background:#f6f7fb;}
 .header{background:#1e2a45;color:#fff;padding:20px;text-align:center;font-size:20px;font-weight:bold;}
@@ -31,37 +34,21 @@ button{padding:8px 12px;margin-top:8px;border:none;border-radius:6px;cursor:poin
 
 <div class="section">
 <h3>2. 길이 / 수량</h3>
-
 <select id="color">
 <option value="silver">실버</option>
 <option value="black">블랙</option>
 </select>
-
 <input type="number" id="length" placeholder="길이(mm)" min="50">
 <input type="number" id="qty" placeholder="수량" min="1">
-
 <div class="total-box" id="price">0 원</div>
 </div>
 
 <div class="section">
 <h3>3. 가공 옵션</h3>
-
-<div>한쪽 탭
-<input type="number" id="tapOneQty" value="0" min="0">
-</div>
-
-<div>양쪽 탭
-<input type="number" id="tapTwoQty" value="0" min="0">
-</div>
-
-<div>홀 가공
-<input type="number" id="holeQty" value="0" min="0">
-</div>
-
-<div>카운터 가공
-<input type="number" id="counterQty" value="0" min="0">
-</div>
-
+한쪽탭 <input type="number" id="tapOneQty" value="0">
+양쪽탭 <input type="number" id="tapTwoQty" value="0">
+홀 <input type="number" id="holeQty" value="0">
+카운터 <input type="number" id="counterQty" value="0">
 <button onclick="addToCart()">장바구니 담기</button>
 </div>
 
@@ -69,17 +56,21 @@ button{padding:8px 12px;margin-top:8px;border:none;border-radius:6px;cursor:poin
 <h3>장바구니</h3>
 <div id="cartList"></div>
 <div class="total-box">총 합계: <span id="grandTotal">0</span> 원</div>
+<button onclick="downloadPDF()">PDF 다운로드</button>
+<button onclick="submitQuote()">견적 요청</button>
 </div>
 
 <script>
 
+const supabase = window.supabase.createClient(
+"https://ritzqnjgivmrtysulzil.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdHpxbmpnaXZtcnR5c3VsemlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5ODA2MjMsImV4cCI6MjA4NzU1NjYyM30.oTeXacJlkMXKw1G4IRWUa3G2DM1wPvFl-9rzf5IdsxY"
+);
+
 const prices={
 2020:{silver:3900,black:6000},
 2040:{silver:6900,black:9000},
-3030:{silver:8900,black:11000},
-3060:{silver:14000,black:18000},
-4040:{silver:16000,black:19000},
-4080:{silver:28000,black:30000}
+3030:{silver:8900,black:11000}
 };
 
 let selectedSize="2020";
@@ -88,137 +79,94 @@ let selectedSize="2020";
 function createSizeButtons(){
 const grid=document.getElementById("sizeGrid");
 grid.innerHTML="";
-
 Object.keys(prices).forEach(size=>{
-
 const card=document.createElement("div");
 card.className="size-card";
-
-card.innerHTML=`
-<img id="img_${size}" src="/images/${size}_silver.png">
-<div>${size}</div>
-`;
-
+card.innerHTML=`<img src="/images/${size}_silver.png"><div>${size}</div>`;
 card.onclick=function(){
 document.querySelectorAll(".size-card").forEach(c=>c.classList.remove("active"));
 card.classList.add("active");
 selectedSize=size;
-updateImage();
 updatePrice();
 };
-
 grid.appendChild(card);
 });
-
 document.querySelector(".size-card").classList.add("active");
 }
 
-/* 이미지 변경 */
-function updateImage(){
-const color=document.getElementById("color").value;
-const img=document.getElementById(`img_${selectedSize}`);
-if(img){
-img.src=`/images/${selectedSize}_${color}.png`;
-}
-}
-
-/* 가격 계산 */
 function calculateLine(size,color,length,qty,tapOne,tapTwo,hole,counter){
-
-if(!length || !qty) return 0;
 if(length<50) return 0;
-
 const unit100=Math.ceil(length/100);
 const base100=prices[size][color]/10;
-
 let total=unit100*base100*qty;
-
-total+=300*tapOne;
-total+=600*tapTwo;
-total+=400*hole;
-total+=1000*counter;
-
+total+=300*tapOne+600*tapTwo+400*hole+1000*counter;
 return total;
 }
 
 function updatePrice(){
-
 const color=document.getElementById("color").value;
 const length=parseInt(document.getElementById("length").value)||0;
 const qty=parseInt(document.getElementById("qty").value)||0;
-
 const tapOne=parseInt(document.getElementById("tapOneQty").value)||0;
 const tapTwo=parseInt(document.getElementById("tapTwoQty").value)||0;
 const hole=parseInt(document.getElementById("holeQty").value)||0;
 const counter=parseInt(document.getElementById("counterQty").value)||0;
-
-const total=calculateLine(
-selectedSize,color,length,qty,tapOne,tapTwo,hole,counter
-);
-
-document.getElementById("price").innerText=
-total.toLocaleString()+" 원";
+const total=calculateLine(selectedSize,color,length,qty,tapOne,tapTwo,hole,counter);
+document.getElementById("price").innerText=total.toLocaleString()+" 원";
 }
 
-/* 장바구니 */
+document.addEventListener("input",updatePrice);
+
 function addToCart(){
-
 const color=document.getElementById("color").value;
-const length=parseInt(document.getElementById("length").value)||0;
-const qty=parseInt(document.getElementById("qty").value)||0;
-
-const tapOne=parseInt(document.getElementById("tapOneQty").value)||0;
-const tapTwo=parseInt(document.getElementById("tapTwoQty").value)||0;
-const hole=parseInt(document.getElementById("holeQty").value)||0;
-const counter=parseInt(document.getElementById("counterQty").value)||0;
-
-if(!length||!qty){
-alert("길이와 수량을 입력하세요.");
-return;
-}
-
-const total=calculateLine(
-selectedSize,color,length,qty,tapOne,tapTwo,hole,counter
-);
-
+const length=document.getElementById("length").value;
+const qty=document.getElementById("qty").value;
+if(!length||!qty){alert("길이/수량 입력");return;}
+const total=document.getElementById("price").innerText;
 const div=document.createElement("div");
 div.className="cart-item";
-
-div.innerHTML=`
-<strong>${selectedSize}</strong> (${color})<br>
-길이 ${length}mm / 수량 ${qty}<br>
-한쪽탭 ${tapOne} / 양쪽탭 ${tapTwo} / 홀 ${hole} / 카운터 ${counter}<br>
-금액 <span class="linePrice">${total.toLocaleString()}</span> 원
-<br>
-<button onclick="this.parentElement.remove();updateGrand();">삭제</button>
-`;
-
+div.innerHTML=`${selectedSize} (${color}) / ${length}mm / ${qty}개 / ${total}
+<br><button onclick="this.parentElement.remove();updateGrand();">삭제</button>`;
 document.getElementById("cartList").appendChild(div);
 updateGrand();
 }
 
 function updateGrand(){
 let sum=0;
-document.querySelectorAll(".linePrice").forEach(e=>{
-sum+=parseInt(e.innerText.replace(/,/g,''))||0;
+document.querySelectorAll(".cart-item").forEach(e=>{
+const text=e.innerText.match(/[\d,]+ 원/);
+if(text) sum+=parseInt(text[0].replace(/[^\d]/g,""));
 });
 document.getElementById("grandTotal").innerText=sum.toLocaleString();
 }
 
-/* 이벤트 */
-document.addEventListener("input",updatePrice);
+/* PDF */
+function downloadPDF(){
+const { jsPDF } = window.jspdf;
+const doc=new jsPDF();
+doc.text("프로파일 견적서",20,20);
+doc.text("총합: "+document.getElementById("grandTotal").innerText+" 원",20,40);
+doc.save("견적서.pdf");
+}
 
-document.getElementById("color").addEventListener("change",function(){
-updateImage();
-updatePrice();
+/* 견적 저장 + 메일 */
+async function submitQuote(){
+const items=[...document.querySelectorAll(".cart-item")].map(e=>e.innerText).join(" | ");
+const total=document.getElementById("grandTotal").innerText;
+
+await supabase.from("quotes").insert([{items,total,status:"접수"}]);
+
+await fetch("/api/send-email",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({items,total})
 });
 
-document.addEventListener("DOMContentLoaded",function(){
+alert("견적 접수 완료");
+}
+
 createSizeButtons();
-updateImage();
-});
 
 </script>
-
 </body>
 </html>
