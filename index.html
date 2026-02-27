@@ -110,6 +110,21 @@ grid.appendChild(card);
 document.querySelector(".size-card").classList.add("active");
 }
 
+  /* ========================= */
+/* 이미지 변경 */
+/* ========================= */
+
+function updateImage(){
+const color=document.getElementById("color").value;
+document.getElementById(`img_${selectedSize}`).src=
+`/images/${selectedSize}_${color}.png`;
+const img=document.getElementById(`img_${selectedSize}`);
+if(img){
+img.src=`/images/${selectedSize}_${color}.png`;
+}
+}
+
+  
 /* 계산 */
 function calculateLine(size,color,length,qty,tapOne,tapTwo,hole,counter){
 if(length<50||!qty) return 0;
@@ -192,5 +207,6 @@ document.addEventListener("DOMContentLoaded",createSizeButtons);
 </script>
 </body>
 </html>
+
 
 
