@@ -84,22 +84,47 @@ const prices={
 let selectedSize="2020";
 
 function createSizeButtons(){
-const grid=document.getElementById("sizeGrid");
-Object.keys(prices).forEach(size=>{
-const card=document.createElement("div");
-card.className="size-card";
-card.innerHTML=`<div>${size}</div>`;
-card.onclick=function(){
-document.querySelectorAll(".size-card").forEach(c=>c.classList.remove("active"));
-card.classList.add("active");
-selectedSize=size;
-updatePrice();
-};
-grid.appendChild(card);
-});
-document.querySelector(".size-card").classList.add("active");
-}
 
+  const grid = document.getElementById("sizeGrid");
+  grid.innerHTML = "";
+
+  Object.keys(prices).forEach(size=>{
+
+    const card = document.createElement("div");
+    card.className = "size-card";
+
+    card.innerHTML = `
+      <img id="img_${size}" src="/images/${size}_silver.png">
+      <div>${size}</div>
+    `;
+
+    card.onclick = function(){
+      document.querySelectorAll(".size-card")
+      .forEach(c=>c.classList.remove("active"));
+
+      card.classList.add("active");
+      selectedSize = size;
+
+      updateImage();
+      updatePrice();
+    };
+
+    grid.appendChild(card);
+  });
+
+  document.querySelector(".size-card").classList.add("active");
+}
+function updateImage(){
+
+  const color = document.getElementById("color").value;
+
+  const img = document.getElementById(`img_${selectedSize}`);
+
+  if(img){
+    img.src = `/images/${selectedSize}_${color}.png`;
+  }
+
+}
 function calculateLine(size,color,length,qty,tapOne,tapTwo,hole,counter){
 if(length<50||!qty) return 0;
 const unit100=Math.ceil(length/100);
@@ -121,6 +146,13 @@ const total=calculateLine(selectedSize,color,length,qty,tapOne,tapTwo,hole,count
 document.getElementById("price").innerText=total.toLocaleString()+" 원";
 }
 
+document.getElementById("color")
+.addEventListener("change",function(){
+  updateImage();
+  updatePrice();
+});
+
+  
 document.addEventListener("input",updatePrice);
 
 function addToCart(){
@@ -183,3 +215,4 @@ createSizeButtons();
 </script>
 </body>
 </html>
+
