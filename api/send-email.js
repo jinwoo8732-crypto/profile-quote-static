@@ -1,39 +1,37 @@
 import nodemailer from "nodemailer";
 
-export default async function handler(req, res) {
+export default async function handler(req,res){
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
+try{
 
-  try {
+const transporter=nodemailer.createTransport({
+service:"gmail",
+auth:{
+user:process.env.SMTP_USER,
+pass:process.env.SMTP_PASS
+}
+});
 
-    const { items, total } = req.body;
+await transporter.sendMail({
+from:process.env.SMTP_USER,
+to:process.env.SMTP_USER,
+subject:"새 견적 접수",
+html:`
+<h2>새 견적 접수</h2>
+<p>이름: ${req.body.name}</p>
+<p>전화번호: ${req.body.phone}</p>
+<p>이메일: ${req.body.email}</p>
+<p>주소: ${req.body.address}</p>
+<hr>
+<p>${req.body.items}</p>
+<p>총액: ${req.body.total} 원</p>
+`
+});
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
+res.status(200).json({success:true});
 
-    await transporter.sendMail({
-      from: process.env.SMTP_USER,
-      to: process.env.SMTP_USER, // 본인에게 받기
-      subject: "📩 새 견적 접수",
-      html: `
-        <h2>새 견적이 접수되었습니다</h2>
-        <p><strong>내용:</strong></p>
-        <p>${items}</p>
-        <p><strong>총액:</strong> ${total} 원</p>
-      `
-    });
-
-    return res.status(200).json({ success: true });
-
-  } catch (error) {
-    console.error("메일 오류:", error);
-    return res.status(500).json({ error: error.message });
-  }
+}catch(err){
+console.error(err);
+res.status(500).json({error:err.message});
+}
 }
