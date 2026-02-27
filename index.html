@@ -41,6 +41,7 @@ input,select{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px 
 <div class="total-box" id="price">0 원</div>
 </div>
 
+
 <script>
 
 const prices={
@@ -54,7 +55,10 @@ const prices={
 
 let selectedSize="2020";
 
-/* 규격 생성 */
+/* ========================= */
+/* 규격 버튼 생성 */
+/* ========================= */
+
 function createSizeButtons(){
 const grid=document.getElementById("sizeGrid");
 grid.innerHTML="";
@@ -83,50 +87,123 @@ grid.appendChild(card);
 document.querySelector(".size-card").classList.add("active");
 }
 
-/* 색상 변경 시 이미지 변경 */
+/* ========================= */
+/* 이미지 변경 */
+/* ========================= */
+
 function updateImage(){
 const color=document.getElementById("color").value;
-document.getElementById(`img_${selectedSize}`).src=`/images/${selectedSize}_${color}.png`;
+document.getElementById(`img_${selectedSize}`).src=
+`/images/${selectedSize}_${color}.png`;
 }
 
+/* ========================= */
 /* 가격 계산 */
+/* ========================= */
+
+function calculateLine(size,color,length,qty,tapOne,tapTwo,hole,counter){
+
+if(length<50) return 0;
+
+const unit100=Math.ceil(length/100);
+const base100=prices[size][color]/10;
+
+let total=unit100*base100*qty;
+
+total+=300*tapOne;
+total+=600*tapTwo;
+total+=400*hole;
+total+=1000*counter;
+
+return total;
+}
+
 function updatePrice(){
 
 const color=document.getElementById("color").value;
 const length=parseInt(document.getElementById("length").value)||0;
 const qty=parseInt(document.getElementById("qty").value)||0;
 
-if(!length || !qty){
-document.getElementById("price").innerText="0 원";
+const tapOne=parseInt(document.getElementById("tapOneQty").value)||0;
+const tapTwo=parseInt(document.getElementById("tapTwoQty").value)||0;
+const hole=parseInt(document.getElementById("holeQty").value)||0;
+const counter=parseInt(document.getElementById("counterQty").value)||0;
+
+const total=calculateLine(
+selectedSize,color,length,qty,tapOne,tapTwo,hole,counter
+);
+
+document.getElementById("price").innerText=
+total.toLocaleString()+" 원";
+}
+
+/* ========================= */
+/* 장바구니 */
+/* ========================= */
+
+function addToCart(){
+
+const color=document.getElementById("color").value;
+const length=parseInt(document.getElementById("length").value)||0;
+const qty=parseInt(document.getElementById("qty").value)||0;
+
+const tapOne=parseInt(document.getElementById("tapOneQty").value)||0;
+const tapTwo=parseInt(document.getElementById("tapTwoQty").value)||0;
+const hole=parseInt(document.getElementById("holeQty").value)||0;
+const counter=parseInt(document.getElementById("counterQty").value)||0;
+
+if(!length||!qty){
+alert("길이/수량 입력");
 return;
 }
 
-if(length<50){
-document.getElementById("price").innerText="50mm 이상 입력";
-return;
+const total=calculateLine(
+selectedSize,color,length,qty,tapOne,tapTwo,hole,counter
+);
+
+const div=document.createElement("div");
+div.className="cart-item";
+
+div.innerHTML=`
+<strong>${selectedSize}</strong> (${color})<br>
+길이 ${length}mm / 수량 ${qty}<br>
+한쪽탭 ${tapOne} / 양쪽탭 ${tapTwo} / 홀 ${hole} / 카운터 ${counter}<br>
+금액 <span class="linePrice">${total.toLocaleString()}</span> 원
+<br>
+<button onclick="this.parentElement.remove();updateGrand();">삭제</button>
+`;
+
+document.getElementById("cartList").appendChild(div);
+updateGrand();
 }
 
-const unit100=Math.ceil(length/100);
-const base100=prices[selectedSize][color]/10;
-const total=unit100*base100*qty;
-
-document.getElementById("price").innerText=total.toLocaleString()+" 원";
+function updateGrand(){
+let sum=0;
+document.querySelectorAll(".linePrice").forEach(e=>{
+sum+=parseInt(e.innerText.replace(/,/g,''))||0;
+});
+document.getElementById("grandTotal").innerText=sum.toLocaleString();
 }
 
+/* ========================= */
 /* 이벤트 */
+/* ========================= */
+
 document.addEventListener("input",updatePrice);
+
 document.getElementById("color").addEventListener("change",function(){
 updateImage();
 updatePrice();
 });
 
-/* 시작 */
 document.addEventListener("DOMContentLoaded",function(){
 createSizeButtons();
 updateImage();
 });
 
+
 </script>
 
 </body>
 </html>
+
