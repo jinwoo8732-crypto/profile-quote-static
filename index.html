@@ -9,16 +9,125 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#f6f7fb;}
-.header{background:#1e2a45;color:#fff;padding:20px;text-align:center;font-size:20px;font-weight:bold;}
-.section{background:#fff;padding:20px;margin-bottom:10px;}
-.size-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
-.size-card{padding:10px;background:#eef1f7;border-radius:10px;text-align:center;cursor:pointer;}
-.size-card.active{background:#1e2a45;color:#fff;}
-input,select{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #ccc;}
-.total-box{font-weight:bold;font-size:18px;margin-top:10px;}
-.cart-item{background:#f1f3f9;padding:10px;border-radius:8px;margin-bottom:8px;}
-button{padding:8px 12px;margin-top:8px;border:none;border-radius:6px;cursor:pointer;}
+body{
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background:#f4f6fb;
+}
+
+.header{
+  background:#1e2a45;
+  color:#fff;
+  padding:18px;
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+}
+
+.section{
+  background:#fff;
+  padding:20px;
+  margin:12px;
+  border-radius:12px;
+  box-shadow:0 3px 12px rgba(0,0,0,0.05);
+}
+
+.size-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+  gap:14px;
+}
+
+.size-card{
+  background:#eef1f7;
+  border-radius:12px;
+  padding:15px;
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.2s ease;
+  border:2px solid transparent;
+}
+
+.size-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+.size-card.active{
+  background:#1e2a45;
+  color:#fff;
+  border:2px solid #1e2a45;
+}
+
+.size-card img{
+  width:100%;
+  max-height:90px;
+  object-fit:contain;
+  display:block;
+  margin:0 auto 10px auto;
+}
+
+input,select{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+  background:#1e2a45;
+  color:#fff;
+  cursor:pointer;
+}
+
+button:hover{
+  opacity:0.9;
+}
+
+.cart-item{
+  background:#f1f3f9;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:10px;
+  font-size:14px;
+}
+
+.total-box{
+  font-weight:bold;
+  font-size:18px;
+  margin-top:10px;
+}
+
+/* 📱 모바일 최적화 */
+@media(max-width:600px){
+
+  .section{
+    margin:10px;
+    padding:16px;
+  }
+
+  .size-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .header{
+    font-size:18px;
+  }
+
+  button{
+    padding:16px;
+    font-size:15px;
+  }
+
+}
 </style>
 </head>
 
@@ -218,5 +327,6 @@ createSizeButtons();
 </script>
 </body>
 </html>
+
 
 
