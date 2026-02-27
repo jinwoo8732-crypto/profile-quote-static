@@ -5,32 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>프로파일커머스 자동견적</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <style>
-body{margin:0;font-family:Arial;background:#f6f7fb;}
+body{margin:0;font-family:Arial;background:#f4f6fb;}
 .header{background:#1e2a45;color:#fff;padding:20px;text-align:center;font-weight:bold;font-size:20px;}
 .section{background:#fff;padding:20px;margin-bottom:10px;}
 .size-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
-.size-card{padding:10px;background:#eef1f7;border-radius:10px;text-align:center;cursor:pointer;}
+.size-card{padding:10px;background:#eef1f7;border-radius:10px;text-align:center;cursor:pointer;transition:0.2s;}
 .size-card.active{background:#1e2a45;color:#fff;}
 .size-card img{width:100%;max-height:80px;object-fit:contain;margin-bottom:6px;}
 input,select{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px solid #ccc;}
+.error-msg{color:red;font-size:13px;margin-top:4px;}
 .cart-item{background:#f1f3f9;padding:10px;border-radius:8px;margin-bottom:8px;font-size:14px;}
-.cart-item button{margin-top:5px;margin-right:5px;}
-.fixed-bar{position:fixed;bottom:0;left:0;width:100%;background:#fff;border-top:1px solid #ddd;padding:10px;display:flex;gap:10px;}
-.fixed-bar button{flex:1;padding:15px;border:none;border-radius:8px;font-weight:bold;}
-.btn-primary{background:#1e2a45;color:#fff;}
-.btn-outline{background:#fff;border:2px solid #1e2a45;color:#1e2a45;}
-.footer-space{height:120px;}
+.cart-item input{width:70px;}
 .total-box{font-weight:bold;font-size:18px;margin-top:10px;}
+button{padding:10px;border:none;border-radius:6px;cursor:pointer;}
+.btn-primary{background:#1e2a45;color:#fff;}
+.btn-danger{background:#c0392b;color:#fff;}
+.btn-gray{background:#ccc;}
 </style>
 </head>
 
 <body>
 
-<div class="header">프로파일 자동견적</div>
+<div class="header">프로파일커머스 자동견적</div>
 
 <div class="section">
 <h3>1. 규격 선택</h3>
@@ -44,59 +41,49 @@ input,select{width:100%;padding:8px;margin-top:6px;border-radius:6px;border:1px 
 <option value="black">블랙</option>
 </select>
 <input type="number" id="length" placeholder="길이(mm)" min="50">
+<div id="lengthError" class="error-msg"></div>
 <input type="number" id="qty" placeholder="수량" min="1">
 <div class="total-box" id="price">0 원</div>
-<div id="lengthError" style="color:red;font-size:13px;margin-top:4px;"></div>
 </div>
+
 <div class="section">
 <h3>3. 가공 옵션</h3>
 
-<div style="margin-bottom:15px;">
 <strong>한쪽 탭</strong><br>
-<img src="images/tap_one.png" style="width:120px;"><br>
-<small>한쪽 끝에 탭 가공</small><br>
-수량 <input type="number" id="tapOneQty" value="0" min="0">
-</div>
+<img src="images/tap_one.png" width="120"><br>
+<small>한쪽 끝 탭 가공</small>
+<input type="number" id="tapOneQty" value="0" min="0">
 
-<div style="margin-bottom:15px;">
+<br><br>
+
 <strong>양쪽 탭</strong><br>
-<img src="images/tap_two.png" style="width:120px;"><br>
-<small>양쪽 끝에 탭 가공</small><br>
-수량 <input type="number" id="tapTwoQty" value="0" min="0">
-</div>
+<img src="images/tap_two.png" width="120"><br>
+<small>양쪽 끝 탭 가공</small>
+<input type="number" id="tapTwoQty" value="0" min="0">
 
-<div style="margin-bottom:15px;">
+<br><br>
+
 <strong>홀 가공</strong><br>
-<img src="images/hole.png" style="width:120px;"><br>
-수량 <input type="number" id="holeQty" value="0" min="0">
-</div>
+<img src="images/hole.png" width="120">
+<input type="number" id="holeQty" value="0" min="0">
 
-<div style="margin-bottom:15px;">
+<br><br>
+
 <strong>카운터보어</strong><br>
-<img src="images/counter.png" style="width:120px;"><br>
-수량 <input type="number" id="counterQty" value="0" min="0">
+<img src="images/counter.png" width="120">
+<input type="number" id="counterQty" value="0" min="0">
+
+<br><br>
+<button class="btn-primary" onclick="addToCart()">장바구니 담기</button>
 </div>
 
-<button style="margin-top:10px;width:100%" onclick="addToCart()">장바구니 담기</button>
-</div>
 <div class="section">
 <h3>장바구니</h3>
 <div id="cartList"></div>
 <div class="total-box">총 합계: <span id="grandTotal">0</span> 원</div>
 </div>
 
-<div class="footer-space"></div>
-
-<div class="fixed-bar">
-<button class="btn-outline" onclick="downloadPDF()">PDF</button>
-<button class="btn-primary" onclick="submitQuote()">견적 요청</button>
-</div>
-
 <script>
-
-if(!window._sb){
-window._sb = window.supabase.createClient("https://ritzqnjgivmrtysulzil.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpdHpxbmpnaXZtcnR5c3VsemlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5ODA2MjMsImV4cCI6MjA4NzU1NjYyM30.oTeXacJlkMXKw1G4IRWUa3G2DM1wPvFl-9rzf5IdsxY");
-}
 
 const prices={
 2020:{silver:3900,black:6000},
@@ -111,7 +98,6 @@ let selectedSize="2020";
 
 function createSizeButtons(){
 const grid=document.getElementById("sizeGrid");
-grid.innerHTML="";
 Object.keys(prices).forEach(size=>{
 const card=document.createElement("div");
 card.className="size-card";
@@ -135,18 +121,17 @@ function updateImage(){
 const color=document.getElementById("color").value;
 document.getElementById(`img_${selectedSize}`).src=`images/${selectedSize}_${color}.png`;
 }
+
 function calculateLine(size,color,length,qty,tapOne,tapTwo,hole,counter){
+const error=document.getElementById("lengthError");
+error.innerText="";
 
-const errorBox = document.getElementById("lengthError");
-if(errorBox) errorBox.innerText = "";
-
-if(length && length < 50){
-if(errorBox) errorBox.innerText="최소 주문 길이는 50mm 이상입니다.";
+if(length && length<50){
+error.innerText="최소 주문 길이는 50mm 이상입니다.";
 return 0;
 }
-
-if(length > 3000){
-if(errorBox) errorBox.innerText="3m 초과 제품은 배송이 불가합니다.";
+if(length>3000){
+error.innerText="3m 초과 제품은 배송이 불가합니다.";
 return 0;
 }
 
@@ -154,17 +139,14 @@ const unit100=Math.ceil(length/100);
 const base100=prices[size][color]/10;
 
 let total=unit100*base100*qty;
-
-/* 가공 단가 */
-total += 300 * tapOne;
-total += 600 * tapTwo;   // 양쪽은 2배
-total += 400 * hole;
-total += 1000 * counter;
+total+=300*tapOne;
+total+=600*tapTwo;
+total+=400*hole;
+total+=1000*counter;
 
 return total;
 }
 
-  
 function updatePrice(){
 const color=document.getElementById("color").value;
 const length=parseInt(document.getElementById("length").value)||0;
@@ -174,7 +156,8 @@ const tapTwo=parseInt(document.getElementById("tapTwoQty").value)||0;
 const hole=parseInt(document.getElementById("holeQty").value)||0;
 const counter=parseInt(document.getElementById("counterQty").value)||0;
 
-const total=calculateLine(selectedSize,color,length,qty,tapOne,tapTwo,hole,counter);document.getElementById("price").innerText=total.toLocaleString()+" 원";
+const total=calculateLine(selectedSize,color,length,qty,tapOne,tapTwo,hole,counter);
+document.getElementById("price").innerText=total.toLocaleString()+" 원";
 }
 
 document.addEventListener("input",updatePrice);
@@ -183,26 +166,27 @@ function addToCart(){
 const color=document.getElementById("color").value;
 const length=parseInt(document.getElementById("length").value)||0;
 const qty=parseInt(document.getElementById("qty").value)||0;
-const tap=parseInt(document.getElementById("tapQty").value)||0;
+const tapOne=parseInt(document.getElementById("tapOneQty").value)||0;
+const tapTwo=parseInt(document.getElementById("tapTwoQty").value)||0;
 const hole=parseInt(document.getElementById("holeQty").value)||0;
 const counter=parseInt(document.getElementById("counterQty").value)||0;
-if(!length||!qty){alert("길이/수량 입력");return;}
-const total=calculateLine(selectedSize,color,length,qty,tap,hole,counter);
+
+if(!length||!qty){alert("길이와 수량을 입력하세요.");return;}
+
+const total=calculateLine(selectedSize,color,length,qty,tapOne,tapTwo,hole,counter);
 
 const div=document.createElement("div");
 div.className="cart-item";
-
 div.innerHTML=`
 <strong>${selectedSize}</strong> (${color})<br>
-길이: <input type="number" value="${length}" style="width:80px;"> mm
-수량: <input type="number" value="${qty}" style="width:60px;">
-<br>한쪽탭 ${tap} / 양쪽탭 ${tap} / 홀 ${hole} / 카운터 ${counter}
+길이: <input type="number" value="${length}"> mm
+수량: <input type="number" value="${qty}">
+<br>가공: 한쪽탭 ${tapOne} / 양쪽탭 ${tapTwo} / 홀 ${hole} / 카운터 ${counter}
 <br>금액: <span class="linePrice">${total.toLocaleString()}</span> 원
 <br>
-<button onclick="recalc(this)">재계산</button>
-<button onclick="this.parentElement.remove();updateGrand();">삭제</button>
+<button class="btn-gray" onclick="recalc(this)">재계산</button>
+<button class="btn-danger" onclick="this.parentElement.remove();updateGrand();">삭제</button>
 `;
-
 document.getElementById("cartList").appendChild(div);
 updateGrand();
 }
@@ -212,7 +196,7 @@ const item=btn.parentElement;
 const length=parseInt(item.querySelectorAll("input")[0].value);
 const qty=parseInt(item.querySelectorAll("input")[1].value);
 const color=document.getElementById("color").value;
-const total=calculateLine(selectedSize,color,length,qty,0,0,0);
+const total=calculateLine(selectedSize,color,length,qty,0,0,0,0);
 item.querySelector(".linePrice").innerText=total.toLocaleString();
 updateGrand();
 }
@@ -225,30 +209,9 @@ sum+=parseInt(p.innerText.replace(/,/g,''))||0;
 document.getElementById("grandTotal").innerText=sum.toLocaleString();
 }
 
-function downloadPDF(){
-const { jsPDF } = window.jspdf;
-const doc=new jsPDF();
-doc.text("Profile Quotation",20,20);
-doc.text("총 합계: "+document.getElementById("grandTotal").innerText+" 원",20,40);
-doc.save("quotation.pdf");
-}
-
-async function submitQuote(){
-let items=[];
-document.querySelectorAll(".cart-item").forEach(item=>{
-items.push(item.innerText);
-});
-const total=document.getElementById("grandTotal").innerText;
-await window._sb.from("quotes").insert([{items:items.join(" | "),total,status:"접수"}]);
-alert("견적 접수 완료");
-}
-
 createSizeButtons();
 updatePrice();
 
 </script>
 </body>
 </html>
-
-
-
