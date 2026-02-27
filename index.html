@@ -177,6 +177,19 @@ if(match) sum+=parseInt(match[0].replace(/[^\d]/g,""));
 document.getElementById("grandTotal").innerText=sum.toLocaleString();
 }
 
+<div class="section">
+<h3>고객 정보</h3>
+
+<input type="text" id="customerName" placeholder="이름">
+<input type="tel" id="customerPhone" placeholder="전화번호">
+<input type="email" id="customerEmail" placeholder="이메일 주소">
+<input type="text" id="customerAddress" placeholder="배송 주소">
+
+</div>
+
+
+
+  
 /* PDF */
 function downloadPDF(){
 const { jsPDF } = window.jspdf;
@@ -207,6 +220,7 @@ document.addEventListener("DOMContentLoaded",createSizeButtons);
 </script>
 </body>
 </html>
+
 
 
 
