@@ -128,6 +128,54 @@ button:hover{
   }
 
 }
+
+.cart-item{
+  background:#f1f3f9;
+  padding:14px;
+  border-radius:10px;
+  margin-bottom:10px;
+  font-size:14px;
+  line-height:1.7;
+}
+
+.cart-title{
+  font-weight:bold;
+  font-size:15px;
+  margin-bottom:6px;
+}
+
+.cart-row{
+  margin-bottom:4px;
+}
+
+.edit-input{
+  width:90px;
+  padding:6px;
+  margin-left:6px;
+  border:1px solid #ccc;
+  border-radius:6px;
+}
+
+.btn-row{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
+.btn-row button{
+  flex:1;
+  margin-top:0;
+  padding:10px;
+}
+
+#submitBtn[disabled]{
+  background:#999;
+  cursor:not-allowed;
+}
+
+
+
+  
 </style>
 </head>
 
@@ -167,13 +215,16 @@ button:hover{
 </div>
 
 <div class="section">
-<h3>고객 정보</h3>
-<input type="text" id="customerName" placeholder="이름">
-<input type="tel" id="customerPhone" placeholder="전화번호">
-<input type="email" id="customerEmail" placeholder="이메일">
-<input type="text" id="customerAddress" placeholder="배송주소">
-<button onclick="downloadPDF()">PDF 다운로드</button>
-<button onclick="submitQuote()">견적 요청</button>
+  <h3>고객 정보</h3>
+  <input type="text" id="customerName" placeholder="이름">
+  <input type="tel" id="customerPhone" placeholder="전화번호">
+  <input type="email" id="customerEmail" placeholder="이메일">
+  <input type="text" id="customerAddress" placeholder="배송주소">
+
+  <div id="submitMsg" style="margin-top:10px;font-size:14px;color:#1e2a45;"></div>
+
+  <button type="button" onclick="downloadPDF()">PDF 다운로드</button>
+  <button type="button" id="submitBtn" onclick="submitQuote()">견적 요청</button>
 </div>
 
 <script>
@@ -266,7 +317,6 @@ document.getElementById("color")
 
   
 document.addEventListener("input",updatePrice);
-
 function addToCart(){
 
   const color = document.getElementById("color").value;
@@ -294,24 +344,40 @@ function addToCart(){
     counter
   );
 
+  const processList = [];
+  if(tapOne > 0) processList.push(`한쪽탭 ${tapOne}`);
+  if(tapTwo > 0) processList.push(`양쪽탭 ${tapTwo}`);
+  if(hole > 0) processList.push(`홀 ${hole}`);
+  if(counter > 0) processList.push(`카운터 ${counter}`);
+
+  const processText = processList.length ? processList.join(" / ") : "없음";
+
   const div = document.createElement("div");
   div.className = "cart-item";
 
   div.innerHTML = `
-    <strong>규격:</strong> ${selectedSize} (${color})<br>
-    <strong>길이:</strong> ${length}mm<br>
-    <strong>수량:</strong> ${qty}개<br>
-    <strong>가공:</strong> 
-      한쪽탭 ${tapOne} / 
-      양쪽탭 ${tapTwo} / 
-      홀 ${hole} / 
-      카운터 ${counter}<br>
-    <strong>금액:</strong> 
-      <span class="linePrice">${total.toLocaleString()}</span> 원
-    <br>
-    <button onclick="this.parentElement.remove(); updateGrand();">
-      삭제
-    </button>
+    <div class="cart-title">규격: ${selectedSize} (${color})</div>
+
+    <div class="cart-row">
+      길이:
+      <input type="number" class="edit-input cart-length" value="${length}" min="50"> mm
+    </div>
+
+    <div class="cart-row">
+      수량:
+      <input type="number" class="edit-input cart-qty" value="${qty}" min="1"> 개
+    </div>
+
+    <div class="cart-row">가공: ${processText}</div>
+
+    <div class="cart-row">
+      금액: <strong><span class="linePrice">${total.toLocaleString()}</span> 원</strong>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" onclick="recalcCartItem(this, ${tapOne}, ${tapTwo}, ${hole}, ${counter}, '${selectedSize}', '${color}')">재계산</button>
+      <button type="button" onclick="this.closest('.cart-item').remove(); updateGrand();">삭제</button>
+    </div>
   `;
 
   document.getElementById("cartList").appendChild(div);
@@ -325,8 +391,7 @@ function updateGrand(){
     sum += parseInt(el.innerText.replace(/,/g,"")) || 0;
   });
 
-  document.getElementById("grandTotal").innerText =
-    sum.toLocaleString();
+  document.getElementById("grandTotal").innerText = sum.toLocaleString();
 }
 
 function downloadPDF(){
@@ -337,36 +402,116 @@ doc.text("총합: "+document.getElementById("grandTotal").innerText+" 원",20,40
 doc.save("견적서.pdf");
 }
 
+let isSubmitting = false;
+
 async function submitQuote(){
 
-const name=document.getElementById("customerName").value;
-const phone=document.getElementById("customerPhone").value;
-const email=document.getElementById("customerEmail").value;
-const address=document.getElementById("customerAddress").value;
+  if(isSubmitting){
+    return;
+  }
 
-if(!name||!phone||!email){
-alert("이름, 전화번호, 이메일 입력");
-return;
+  const submitBtn = document.getElementById("submitBtn");
+  const submitMsg = document.getElementById("submitMsg");
+
+  const name = document.getElementById("customerName").value.trim();
+  const phone = document.getElementById("customerPhone").value.trim();
+  const email = document.getElementById("customerEmail").value.trim();
+  const address = document.getElementById("customerAddress").value.trim();
+
+  if(!name || !phone || !email){
+    alert("이름, 전화번호, 이메일을 입력하세요.");
+    return;
+  }
+
+  const cartItems = [...document.querySelectorAll(".cart-item")];
+  if(cartItems.length === 0){
+    alert("장바구니가 비어 있습니다.");
+    return;
+  }
+
+  const items = cartItems.map(e=>e.innerText).join(" | ");
+  const total = document.getElementById("grandTotal").innerText;
+
+  const requestKey = `${name}|${phone}|${email}|${items}|${total}`;
+  if(sessionStorage.getItem("lastQuoteRequest") === requestKey){
+    alert("같은 내용의 견적 요청이 이미 전송되었습니다.");
+    return;
+  }
+
+  try{
+    isSubmitting = true;
+    submitBtn.disabled = true;
+    submitBtn.innerText = "전송 중...";
+    submitMsg.innerText = "견적 요청을 전송하고 있습니다.";
+
+    await window._sb.from("quotes").insert([{
+      name,
+      phone,
+      email,
+      address,
+      items,
+      total,
+      status:"접수"
+    }]);
+
+    const mailRes = await fetch("/api/send-email",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name,phone,email,address,items,total})
+    });
+
+    if(!mailRes.ok){
+      throw new Error("메일 전송 실패");
+    }
+
+    sessionStorage.setItem("lastQuoteRequest", requestKey);
+
+    submitMsg.innerText = "견적 요청이 완료되었습니다.";
+    alert("견적 접수 완료");
+
+  }catch(err){
+    console.error(err);
+    submitMsg.innerText = "전송 중 문제가 발생했습니다.";
+    alert("견적 요청 중 오류가 발생했습니다.");
+  }finally{
+    isSubmitting = false;
+    submitBtn.disabled = false;
+    submitBtn.innerText = "견적 요청";
+  }
 }
-
-const items=[...document.querySelectorAll(".cart-item")].map(e=>e.innerText).join(" | ");
-const total=document.getElementById("grandTotal").innerText;
-
-await window._sb.from("quotes").insert([{
-name,phone,email,address,items,total,status:"접수"
-}]);
-
-await fetch("/api/send-email",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({name,phone,email,address,items,total})
-});
-
-alert("견적 접수 완료");
-}
-
 createSizeButtons();
 
+function recalcCartItem(btn, tapOne, tapTwo, hole, counter, size, color){
+
+  const item = btn.closest(".cart-item");
+  const length = parseInt(item.querySelector(".cart-length").value) || 0;
+  const qty = parseInt(item.querySelector(".cart-qty").value) || 0;
+
+  if(length < 50){
+    alert("최소 길이는 50mm 이상입니다.");
+    return;
+  }
+
+  if(qty < 1){
+    alert("수량은 1개 이상이어야 합니다.");
+    return;
+  }
+
+  const total = calculateLine(
+    size,
+    color,
+    length,
+    qty,
+    tapOne,
+    tapTwo,
+    hole,
+    counter
+  );
+
+  item.querySelector(".linePrice").innerText = total.toLocaleString();
+  updateGrand();
+}
+  
 </script>
 </body>
 </html>
